@@ -112,7 +112,7 @@ export default function App() {
 
     // Sorting
     if (sortBy === "time") {
-      result.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      result.sort((a, b) => parseUTC(a.start).getTime() - parseUTC(b.start).getTime());
     } else {
       result.sort((a, b) => a.duration - b.duration);
     }
@@ -120,14 +120,26 @@ export default function App() {
     setFilteredContests(result);
   }, [allContests, selectedPlatform, searchQuery, sortBy]);
 
+  // Helper: Correctly parse CLIST API dates as UTC
+  const parseUTC = (dateStr: string): Date => {
+    if (!dateStr) return new Date();
+    let cleanStr = dateStr.trim();
+    // Replace space with T if needed
+    if (!cleanStr.includes("T") && cleanStr.includes(" ")) {
+      cleanStr = cleanStr.replace(" ", "T");
+    }
+    // Append Z if no timezone information is present
+    if (!cleanStr.endsWith("Z") && !cleanStr.includes("+") && !/-\d{2}:?\d{2}$/.test(cleanStr)) {
+      cleanStr += "Z";
+    }
+    return new Date(cleanStr);
+  };
+
   // Original Filtering & Logical Checks
   const isUpcoming = (startStr: string) => {
-    const contestUTC = new Date(startStr);
-    // Bangladesh offset: UTC + 6 hours
-    const contestBd = new Date(contestUTC.getTime() + 6 * 60 * 60 * 1000);
+    const contestUTC = parseUTC(startStr);
     const now = new Date();
-    // Comparing exact local/system time against Bangladesh-offsetted contest time as in original
-    return contestBd >= now;
+    return contestUTC >= now;
   };
 
   const filterAndProcessContests = (objects: Contest[]): ContestInfo[] => {
@@ -163,7 +175,7 @@ export default function App() {
     });
 
     // Bubble-like sort simulation (done through standard array sort)
-    return processed.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    return processed.sort((a, b) => parseUTC(a.start).getTime() - parseUTC(b.start).getTime());
   };
 
   // Helper: Original duration converter
@@ -177,29 +189,60 @@ export default function App() {
     return `${h}:00`;
   };
 
-  // Helper: Original Bangladesh standard time formatter
+  // Helper: Correct Bangladesh standard time formatter using Intl to force Asia/Dhaka
   const formatDateTimeBD = (dtStr: string) => {
-    const utcDate = new Date(dtStr);
-    const bdDate = new Date(utcDate.getTime() + 6 * 60 * 60 * 1000); 
-    let h = bdDate.getHours();
-    let m = bdDate.getMinutes();
-    const ampm = h >= 12 ? "PM" : "AM";
+    try {
+      const date = new Date(dtStr);
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Dhaka",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+      
+      const parts = formatter.formatToParts(date);
+      let day = "";
+      let month = "";
+      let year = "";
+      let hour = "";
+      let minute = "";
+      let dayPeriod = "";
+      
+      parts.forEach(part => {
+        if (part.type === "day") day = part.value;
+        if (part.type === "month") month = part.value;
+        if (part.type === "year") year = part.value;
+        if (part.type === "hour") hour = part.value;
+        if (part.type === "minute") minute = part.value;
+        if (part.type === "dayPeriod") dayPeriod = part.value.toUpperCase();
+      });
+      
+      return `${day} ${month} ${year} - ${hour}:${minute} ${dayPeriod}`;
+    } catch (e) {
+      return new Date(dtStr).toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+    }
+  };
 
-    h = h % 12;
-    if (h === 0) h = 12;
-
-    const mStr = m.toString().padStart(2, "0");
-    const time12 = `${h}:${mStr} ${ampm}`; 
-    const day = bdDate.getDate();
-    const month = bdDate.toLocaleString("en-US", { month: "short" }); 
-    const year = bdDate.getFullYear();
-
-    return `${day} ${month} ${year} - ${time12}`;
+  // Helper: Live Local Time clock formatter
+  const formatCurrentLocalTime = (date: Date) => {
+    try {
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      return date.toLocaleTimeString();
+    }
   };
 
   // Helper: Local browser timezone formatter
   const formatLocalTime = (dtStr: string) => {
-    const d = new Date(dtStr);
+    const d = parseUTC(dtStr);
     return d.toLocaleString("en-US", {
       day: "numeric",
       month: "short",
@@ -212,7 +255,7 @@ export default function App() {
 
   // Real-time Relative countdown calculations
   const getCountdown = (startStr: string) => {
-    const contestTime = new Date(startStr).getTime();
+    const contestTime = parseUTC(startStr).getTime();
     const now = nowTime.getTime();
     const diff = contestTime - now;
 
@@ -245,7 +288,7 @@ export default function App() {
   const copyToClipboard = (contest: ContestInfo) => {
     const textToCopy = `🏆 Contest: ${contest.event}
 Platform: ${contest.platform}
-Starting Time: ${formatDateTimeBD(contest.start)} (BST)
+Starting Time: ${formatLocalTime(contest.start)}
 Duration: ${durationHM(contest.duration)}
 Link: ${contest.href}`;
 
@@ -309,7 +352,7 @@ Link: ${contest.href}`;
   // Get next immediate contest for the Hero Feature card
   const nextContest = filteredContests.length > 0 
     ? filteredContests.find(c => {
-        const diff = new Date(c.start).getTime() - nowTime.getTime();
+        const diff = parseUTC(c.start).getTime() - nowTime.getTime();
         return diff > 0;
       }) || filteredContests[0]
     : null;
@@ -330,7 +373,7 @@ Link: ${contest.href}`;
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 pointer-events-none" />
 
       <header className="relative border-b-2 border-[#1e293b] bg-[#0d1527]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-start">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
           
           {/* Logo & Title in Geometric Style with Satisfying Reveal Animation */}
           <motion.div 
@@ -345,6 +388,21 @@ Link: ${contest.href}`;
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
               IIUC CP REMAINDER
             </h1>
+          </motion.div>
+
+          {/* Live Local Clock */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="hidden sm:flex flex-col items-end font-mono text-right"
+          >
+            <span className="text-[10px] font-bold uppercase tracking-widest text-sky-400 flex items-center gap-1.5 leading-none">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Local Time
+            </span>
+            <span className="text-lg font-black text-white mt-1.5 tabular-nums">
+              {formatCurrentLocalTime(nowTime)}
+            </span>
           </motion.div>
         </div>
       </header>
@@ -413,9 +471,9 @@ Link: ${contest.href}`;
                   </div>
                   
                   <div>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Bangladesh Time</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase block tracking-wider">Starting Time</span>
                     <span className="text-slate-300 font-semibold text-xs leading-relaxed mt-1 block">
-                      {formatDateTimeBD(nextContest.start)}
+                      {formatLocalTime(nextContest.start)}
                     </span>
                   </div>
 
@@ -691,9 +749,6 @@ Link: ${contest.href}`;
                             <span className={`platform-pill rounded text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 inline-block ${style.badge}`}>
                               {contest.platform}
                             </span>
-                            <div className="text-[10px] font-mono text-slate-450 mt-1">
-                              ID: {contest.id}
-                            </div>
                           </div>
                         </div>
 
@@ -717,18 +772,10 @@ Link: ${contest.href}`;
                         {/* Geometric metadata wrapper */}
                         <div className="mt-4 space-y-2.5 bg-[#152035] border border-[#1e293b] p-3.5 rounded text-xs font-mono text-slate-300">
                           
-                          {/* Bangladesh Standard Time */}
+                          {/* Starting Time (Local) */}
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 leading-none">Starting Time (BST)</span>
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 leading-none">Starting Time</span>
                             <span className="text-slate-100 font-semibold mt-1">
-                              {formatDateTimeBD(contest.start)}
-                            </span>
-                          </div>
-
-                          {/* Local Time Zone */}
-                          <div className="flex flex-col gap-0.5 pt-2 border-t border-[#273754]">
-                            <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 leading-none">Starting Time (Local)</span>
-                            <span className="text-slate-400 text-[11px] mt-1">
                               {formatLocalTime(contest.start)}
                             </span>
                           </div>
