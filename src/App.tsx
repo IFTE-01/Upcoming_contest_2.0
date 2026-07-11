@@ -437,7 +437,12 @@ Link: ${contest.href}`;
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, type: "spring", stiffness: 100, damping: 15 }}
                 whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                className="lg:col-span-2 relative overflow-hidden bg-[#0d1527] border border-[#1e293b] rounded p-6 shadow-md group"
+                className="lg:col-span-2 relative overflow-hidden bg-[#0d1527]/90 border border-[#1e293b] rounded p-6 shadow-md group"
+                style={{ 
+                  backgroundImage: `linear-gradient(to bottom, rgba(13, 21, 39, 0.45), rgba(13, 21, 39, 0.75)), url('https://api.campustransfer.com/uploads/university/g4-CTeekyzr.png')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
               >
                 {/* Left accent bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-200 ${platformStyles[nextContest.platform]?.barColor || "bg-slate-400"}`} />
