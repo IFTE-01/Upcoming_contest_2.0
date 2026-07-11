@@ -392,7 +392,7 @@ Link: ${contest.href}`;
               A3 Tech Presents
             </span>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              IIUC CP REMAINDER
+              IIUC CP REMINDER
             </h1>
           </motion.div>
 
@@ -839,7 +839,7 @@ Link: ${contest.href}`;
 
       <footer className="relative border-t border-[#1e293b] bg-[#0d1527] py-8 mt-16 font-mono text-[10px] uppercase font-bold tracking-widest text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} IIUC CP REMAINDER | A3 Tech</p>
+          <p>© {new Date().getFullYear()} IIUC CP REMINDER | A3 Tech</p>
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
             <span>Developer: Md. Iftekhar Alam</span>
           </div>

@@ -1,5 +1,5 @@
 {
-  "name": "IIUC CP Remainder",
+  "name": "IIUC CP Reminder",
   "description": "A polished, responsive competitive programming contest tracker developed by Md. Iftekhar Alam of A3 Tech.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
