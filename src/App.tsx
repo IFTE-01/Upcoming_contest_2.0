@@ -369,6 +369,12 @@ Link: ${contest.href}`;
   return (
     <div className="min-h-screen bg-[#090d16] text-[#f1f5f9] font-sans selection:bg-sky-500/30 selection:text-white relative">
       
+      {/* Subtle Blended Background Image Effect */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-[0.08] pointer-events-none"
+        style={{ backgroundImage: `url('https://api.campustransfer.com/uploads/university/g4-CTeekyzr.png')` }}
+      />
+      
       {/* Blueprint Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 pointer-events-none" />
 
@@ -439,7 +445,7 @@ Link: ${contest.href}`;
                 whileHover={{ y: -3, transition: { duration: 0.2 } }}
                 className="lg:col-span-2 relative overflow-hidden bg-[#0d1527]/90 border border-[#1e293b] rounded p-6 shadow-md group"
                 style={{ 
-                  backgroundImage: `linear-gradient(to bottom, rgba(13, 21, 39, 0.45), rgba(13, 21, 39, 0.75)), url('https://api.campustransfer.com/uploads/university/g4-CTeekyzr.png')`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(13, 21, 39, 0.62), rgba(13, 21, 39, 0.85)), url('https://api.campustransfer.com/uploads/university/g4-CTeekyzr.png')`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
